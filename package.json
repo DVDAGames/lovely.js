@@ -1,44 +1,37 @@
 {
-  "name": "love.js",
-  "version": "11.4.1",
-  "description": "Tooling to support the Emscripten port of LÖVE.",
+  "name": "@dvdagames/lovely.js",
+  "version": "0.1.0",
+  "description": "Patched LÖVE web runtime bundles for Lovely.",
+  "type": "module",
   "engines": {
-    "node": ">=7.10.0",
-    "npm": ">=4.2.0"
+    "node": ">=22"
   },
-  "main": "index.js",
   "scripts": {
-    "lint": "eslint index.js src",
-    "test": "npm run lint",
-    "preversion": "npm run test",
-    "version": "./build_lovejs.sh",
-    "postversion": "git push && git push --tags"
-  },
-  "bin": {
-    "love.js": "./index.js"
+    "build": "node --experimental-strip-types scripts/package-runtime.ts",
+    "lint": "eslint .",
+    "test": "npm run lint && npm run typecheck && npm run verify",
+    "typecheck": "tsc --noEmit",
+    "verify": "node --experimental-strip-types scripts/verify-runtime.ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Davidobot/love.js.git"
+    "url": "git+https://github.com/DVDAGames/lovely.js.git"
   },
-  "author": "Tanner Rogalsky <tanner@tannerrogalsky.com>",
+  "author": "DVDA Games",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Davidobot/love.js/issues"
+    "url": "https://github.com/DVDAGames/lovely.js/issues"
   },
-  "homepage": "https://github.com/Davidobot/love.js#readme",
+  "homepage": "https://github.com/DVDAGames/lovely.js#readme",
+  "files": [
+    "dist",
+    "docs",
+    "scripts"
+  ],
   "devDependencies": {
-    "eslint": "^3.19.0",
-    "eslint-config-airbnb": "^15.0.1",
-    "eslint-plugin-import": "^2.3.0",
-    "eslint-plugin-jsx-a11y": "^5.0.3",
-    "eslint-plugin-react": "^7.0.1"
-  },
-  "dependencies": {
-    "commander": "^2.9.0",
-    "fs-extra": "^3.0.1",
-    "klaw-sync": "^2.1.0",
-    "mustache": "^2.3.0",
-    "uuid": "^3.0.1"
+    "@types/node": "^24.10.1",
+    "eslint": "^9.39.1",
+    "eslint-config-love": "^154.0.0",
+    "typescript": "^5.9.3"
   }
 }
