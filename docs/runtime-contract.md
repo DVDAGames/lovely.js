@@ -11,11 +11,17 @@ can build web releases with one command and without Node/npm setup.
 ```text
 dist/
   web-compat/
+    index.html
+    lovely-game-loader.js
+    lovely-web-shims.js
     love.js
     love.wasm
     theme/
     lovely-runtime.json
   web-threaded/
+    index.html
+    lovely-game-loader.js
+    lovely-web-shims.js
     love.js
     love.wasm
     love.worker.js
@@ -39,6 +45,9 @@ Each bundle includes `lovely-runtime.json`:
   "loveVersion": "11.5",
   "emscriptenVersion": "2.0.0",
   "channel": "love-11-plus",
+  "html": "index.html",
+  "loader": "lovely-game-loader.js",
+  "shims": "lovely-web-shims.js",
   "entrypoint": "love.js",
   "wasm": "love.wasm",
   "worker": null,
@@ -54,40 +63,69 @@ Each bundle includes `lovely-runtime.json`:
 Lovely should verify the manifest and file checksums before copying a runtime
 bundle into a game build.
 
+## Default HTML
+
+Each runtime bundle includes a basic `index.html` template. Lovely should use
+that template when a project does not configure `targets.web.html_template`.
+Project templates remain supported, but the default browser shell belongs to
+Lovely.js so runtime-owned files stay in one place.
+
+The default template expects Lovely to render:
+
+```text
+__GAME_TITLE__
+__WEB_ARGUMENTS__
+__WEB_MEMORY__
+```
+
+`__WEB_ARGUMENTS__` should include `"./game.love"` followed by any configured
+project arguments.
+
 ## Current Loader Contract
 
-The inherited runtime expects an Emscripten preload package:
+Lovely.js now ships `lovely-game-loader.js`, which should be loaded before
+`love.js`. It fetches `game.love` and mounts it at `/game.love` during
+Emscripten `preRun`, so the page can keep:
+
+```js
+window.Module.arguments = ["./game.love"];
+```
+
+Projects may set `window.LovelyRuntime.game` before loading the game loader to
+use a different archive URL, or `window.LovelyRuntime.mountPath` to mount the
+archive somewhere other than `/game.love`.
+
+The inherited runtime originally expected an Emscripten preload package:
 
 ```text
 game.js
 game.data
 ```
 
-The old `love.js` npm CLI generated those files. During migration, Lovely
-should reimplement that packager behavior in Rust and this repo should only
-ship engine/runtime files.
+The old `love.js` npm CLI generated those files. Lovely.js keeps that behavior
+inside the runtime bundle instead of asking the Lovely CLI to synthesize
+browser/runtime glue.
+
+The cleaner contract is for the runtime bundle to load `game.love` directly:
+
+```text
+game.love
+lovely-game-loader.js
+lovely-web-shims.js
+love.js
+love.wasm
+```
 
 Legacy `love.js` distribution surfaces such as the npm CLI, generated sample
 output, manual spec app, and hardcoded rebuild scripts have been removed from
 this repository. They were not part of the current runtime bundle contract and
 were not exercised by CI.
 
-The later, cleaner contract is for the runtime to load `game.love` directly:
-
-```text
-game.love
-love.js
-love.wasm
-```
-
-That direct `.love` loader is the preferred end state, but it should be done as
-a focused runtime patch after the bundle/release pipeline is stable.
-
 ## Migration Priorities
 
 1. Keep the current LÖVE 11.5/Emscripten 2.0.0 output as the baseline bundle.
 2. Add CI packaging and checksum manifests.
-3. Move game packaging out of this repo and into Lovely.
+3. Move game archive packaging out of this repo and into Lovely.
 4. Patch runtime issues: `Module.getMemory`, IDBFS safety, resize/fullscreen,
    mobile text input, shader compatibility, and Lua 5.2 compatibility helpers.
 5. Upgrade Emscripten only when the baseline bundle is reproducible.

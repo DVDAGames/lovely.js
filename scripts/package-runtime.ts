@@ -14,6 +14,9 @@ interface RuntimeManifest {
   channel: string;
   loveVersion: string;
   emscriptenVersion: string;
+  html: 'index.html';
+  loader: 'lovely-game-loader.js';
+  shims: 'lovely-web-shims.js';
   entrypoint: 'love.js';
   wasm: 'love.wasm';
   worker: 'love.worker.js' | null;
@@ -36,6 +39,8 @@ const loveVersion = '11.5';
 const emscriptenVersion = '2.0.0';
 const schema = 1;
 const jsonIndent = '  ';
+const runtimeSupport = ['index.html', 'lovely-game-loader.js', 'lovely-web-shims.js'];
+const runtimeSupportSource = path.join(repoRoot, 'src', 'runtime');
 
 const variants: RuntimeBundle[] = [
   {
@@ -68,6 +73,11 @@ async function packageVariant(bundle: RuntimeBundle): Promise<void> {
       await copyRequired(path.join(bundle.source, file), path.join(output, file));
     }),
   );
+  await Promise.all(
+    runtimeSupport.map(async file => {
+      await copyRequired(path.join(runtimeSupportSource, file), path.join(output, file));
+    }),
+  );
 
   const themePath = path.join(bundle.source, 'theme');
   if (await exists(themePath)) {
@@ -92,6 +102,9 @@ async function packageVariant(bundle: RuntimeBundle): Promise<void> {
     channel,
     loveVersion,
     emscriptenVersion,
+    html: 'index.html',
+    loader: 'lovely-game-loader.js',
+    shims: 'lovely-web-shims.js',
     entrypoint: 'love.js',
     wasm: 'love.wasm',
     worker: bundle.worker,

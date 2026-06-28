@@ -29,9 +29,15 @@ await Promise.all(
     }),
   ),
 );
+await requireFile(path.join(repoRoot, 'src', 'runtime', 'index.html'));
+await requireFile(path.join(repoRoot, 'src', 'runtime', 'lovely-game-loader.js'));
+await requireFile(path.join(repoRoot, 'src', 'runtime', 'lovely-web-shims.js'));
 
 const releaseRuntime = await readText(path.join(repoRoot, 'src', 'release', 'love.js'));
 const compatRuntime = await readText(path.join(repoRoot, 'src', 'compat', 'love.js'));
+const defaultHtml = await readText(path.join(repoRoot, 'src', 'runtime', 'index.html'));
+const gameLoader = await readText(path.join(repoRoot, 'src', 'runtime', 'lovely-game-loader.js'));
+const webShims = await readText(path.join(repoRoot, 'src', 'runtime', 'lovely-web-shims.js'));
 
 if (!releaseRuntime.includes('var Love')) {
   throw new Error('src/release/love.js does not expose the expected Love entrypoint');
@@ -44,6 +50,18 @@ if (!releaseRuntime.includes('Module["getMemory"]')) {
 }
 if (!compatRuntime.includes('Module["getMemory"]')) {
   throw new Error('Expected legacy getMemory export in compat runtime baseline');
+}
+if (!defaultHtml.includes('lovely-game-loader.js')) {
+  throw new Error('Expected default HTML to load Lovely game loader');
+}
+if (!defaultHtml.includes('__WEB_ARGUMENTS__')) {
+  throw new Error('Expected default HTML to expose web arguments placeholder');
+}
+if (!gameLoader.includes('LovelyGameLoader')) {
+  throw new Error('Expected LovelyGameLoader browser support module');
+}
+if (!webShims.includes('LovelyWeb')) {
+  throw new Error('Expected LovelyWeb browser support module');
 }
 
 process.stdout.write('Runtime baseline verified.\n');

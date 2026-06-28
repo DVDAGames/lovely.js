@@ -36,6 +36,10 @@ dist/web-threaded
 ```
 
 Each output includes a `lovely-runtime.json` manifest with file checksums.
+The bundle also includes a default `index.html` template and Lovely-owned
+browser support files: `lovely-game-loader.js` for direct `game.love` loading
+and `lovely-web-shims.js` for canvas, fullscreen, resize, and text-input
+helpers.
 
 ## Runtime Variants
 
@@ -58,6 +62,7 @@ Lovely.js owns:
 - runtime manifests and checksums,
 - runtime build/release automation,
 - browser/runtime patches needed by Lovely games.
+- web loader and browser compatibility shims.
 
 Lovely owns:
 

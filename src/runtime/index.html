@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, minimum-scale=1, maximum-scale=1" />
+    <title>__GAME_TITLE__</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #071923;
+        --panel: #102c36;
+        --text: #f4f7f8;
+        --muted: #9fb4bd;
+        --accent: #65d6ad;
+      }
+
+      html {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        box-sizing: border-box;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      body {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: inherit;
+      }
+
+      #game {
+        position: absolute;
+        inset: 0 0 42px;
+        display: grid;
+        place-items: center;
+        background: #000;
+      }
+
+      #canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+        outline: none;
+        object-fit: contain;
+      }
+
+      #loading {
+        position: absolute;
+        inset: 0 0 42px;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        transition: opacity 180ms ease;
+      }
+
+      #loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #status {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      #bar {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box;
+        padding: 0 12px;
+        background: var(--panel);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      #title {
+        min-width: 0;
+        overflow: hidden;
+        color: var(--text);
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #fullscreen {
+        appearance: none;
+        border: 1px solid rgb(255 255 255 / 18%);
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        font: inherit;
+        padding: 5px 9px;
+      }
+
+      #fullscreen:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game">
+      <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    </div>
+
+    <div id="loading">
+      <div id="status">Loading...</div>
+    </div>
+
+    <div id="bar">
+      <div id="title">__GAME_TITLE__</div>
+      <button type="button" id="fullscreen">Fullscreen</button>
+    </div>
+
+    <script src="lovely-web-shims.js"></script>
+    <script>
+      window.addEventListener("load", function handleLoad() {
+        window.focus();
+      });
+      window.addEventListener("click", function handleClick() {
+        window.focus();
+      });
+      window.addEventListener(
+        "keydown",
+        function preventPageScroll(event) {
+          if ([32, 37, 38, 39, 40].includes(event.keyCode)) {
+            event.preventDefault();
+          }
+        },
+        false,
+      );
+
+      const statusEl = document.getElementById("status");
+      const loadingEl = document.getElementById("loading");
+
+      window.Module = window.Module || {};
+      window.Module.arguments = __WEB_ARGUMENTS__;
+      window.Module.INITIAL_MEMORY = __WEB_MEMORY__;
+      window.Module.printErr = console.error.bind(console);
+      window.Module.canvas = (function resolveCanvas() {
+        const canvas = document.getElementById("canvas");
+        canvas.addEventListener(
+          "webglcontextlost",
+          function handleContextLost(event) {
+            window.alert("WebGL context lost. Reload the page to continue.");
+            event.preventDefault();
+          },
+          false,
+        );
+        return canvas;
+      })();
+      window.Module.setStatus = function setStatus(text) {
+        if (text) {
+          statusEl.textContent = text;
+        } else if (window.Module.remainingDependencies === 0) {
+          loadingEl.classList.add("hidden");
+        }
+      };
+      window.Module.totalDependencies = 0;
+      window.Module.remainingDependencies = 0;
+      window.Module.monitorRunDependencies = function monitorRunDependencies(left) {
+        this.remainingDependencies = left;
+        this.totalDependencies = Math.max(this.totalDependencies, left);
+        window.Module.setStatus(left ? `Loading... (${this.totalDependencies - left}/${this.totalDependencies})` : "");
+      };
+
+      LovelyWeb.install({ canvasId: "canvas", containerId: "game" });
+      document.getElementById("fullscreen").addEventListener("click", function handleFullscreen() {
+        LovelyWeb.toggleFullscreen("game", "canvas");
+      });
+
+      window.Module.setStatus("Downloading...");
+      window.onerror = function handleError() {
+        window.Module.setStatus("Something went wrong - see the browser console.");
+        window.Module.setStatus = function setPostExceptionStatus(text) {
+          if (text) {
+            window.Module.printErr(`[post-exception status] ${text}`);
+          }
+        };
+      };
+
+      function applicationLoad() {
+        Love(window.Module);
+      }
+    </script>
+    <script src="lovely-game-loader.js"></script>
+    <script async src="love.js" onload="applicationLoad()"></script>
+  </body>
+</html>
